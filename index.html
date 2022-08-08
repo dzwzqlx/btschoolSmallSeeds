@@ -215,22 +215,62 @@
       "https://pt.btschool.club/download.php?id=8612",
       "https://pt.btschool.club/download.php?id=45607"]
 
+    var downloadInterval = 0
+    var index = document.cookie
+    if (index == undefined) {
+      index = 0
+    } else if (index.indexOf("index=") == -1) {
+      index = 0
+    } else {
+      index = Number(index.substring(6, 1000))
+    }
+    console.log("cookie", document.cookie, index)
+    document.cookie = "index=" + index
+    var ifDownloading = false
+    window.onload = function () {
+      document.querySelector("#countInput").value = index + 1
+    }
+
     function download() {
-      let i = 0
-      let downloadInterval = setInterval(() => {
-        if (i < seeds.length) {
-          console.log(seeds[i])
-          downloadSeed(seeds[i])
-          i++
-        } else {
-          clearInterval(downloadInterval)
-        }
-      }, 5000)
+      if (ifDownloading == false) {
+        index = Number(document.querySelector("#countInput").value) - 1
+        downloadInterval = setInterval(() => {
+          if (index < seeds.length) {
+            console.log(seeds[index])
+            downloadSeed(seeds[index])
+            document.querySelector("#countInput").value = index + 1
+            document.cookie = "index=" + index
+            // document.querySelector("#count").innerText = "下载到第 " + (i + 1) + " 个，正在下载"
+            index++
+          } else {
+            document.querySelector("#reminder").innerText = "恭喜！全部下完乐~"
+            clearInterval(downloadInterval)
+            document.querySelector("#download").setAttribute('style', '');
+          }
+        }, 5000)
+        console.log("startInterval ", downloadInterval)
+        ifDownloading = true
+        document.querySelector("#download").setAttribute('style', 'background-color: yellow;');
+      } else {
+        document.querySelector("#reminder").innerText = "下载中，请勿重复点击"
+        setTimeout(() => { document.querySelector("#reminder").innerText = "" }, 3000)
+      }
+    }
+
+    function cancleDownload() {
+      console.log("取消", downloadInterval)
+      clearInterval(downloadInterval)
+      document.querySelector("#download").setAttribute('style', '');
+      if (ifDownloading) {
+        // document.querySelector("#count").innerText = "下载到第 " + (i + 1) + " 个，已取消"
+      }
+      ifDownloading = false
     }
 
     function downloadSeed(href) {
       const a = document.createElement('a');
       a.setAttribute('href', href);
+      // a.setAttribute('target', "_blank");
       a.setAttribute('download', true);
       a.click();
     }
@@ -242,7 +282,12 @@
   <h1>btschool小种批量下载</h1>
   <div>说明：批量下载 btschool 的小种。</br>点击以下按钮，每5秒下载一个种子，一共接近200个种子</div>
   <br />
-  <button type="button" onclick="download();">下载</button>
+  <div id="reminder"></div>
+  <div id="count"></div>
+  <span>从</span><input id="countInput" type="text" style="width: 2em;">开始</input>
+  <button id="download" type="button" onclick="download();">下载</button>
+  <span style="margin: 0.5em"></span>
+  <button id="cancle" type="button" onclick="cancleDownload();">取消下载</button>
   <br />
   <br />
   如果看到这个弹窗，请点击「允许」
